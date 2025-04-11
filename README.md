@@ -604,11 +604,4 @@ IntelliSearch is an AI-powered personalized search aggregator that enhances sear
 - Google Custom Search API
 - Google Gemini API
 
-## API Keys Configuration
-(To be added as development progresses)
 
-## Testing
-(To be added as development progresses)
-
-## Deployment
-(To be added as development progresses)
