@@ -232,7 +232,7 @@ exports.deleteSavedSearch = async (req, res) => {
       });
     }
 
-    await savedSearch.remove();
+    await SavedSearch.deleteOne({ _id: req.params.id });
 
     res.status(200).json({
       success: true,
