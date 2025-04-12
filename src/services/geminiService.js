@@ -89,6 +89,92 @@ class GeminiService {
             return [];
         }
     }
+
+    async generateFAQs(query) {
+        try {
+            if (!this.model) {
+                console.warn('Gemini model not initialized, returning empty FAQs');
+                return [];
+            }
+
+            const prompt = `Given the search query: "${query}", generate 5 relevant frequently asked questions (FAQs) with detailed answers.
+            Each FAQ should be informative and helpful for someone interested in this topic.
+            
+            Important: Provide answers in plain text format only. DO NOT use markdown formatting, asterisks, bullet points, or any special formatting characters.
+            
+            Format your response as JSON that can be parsed:
+            [
+              {
+                "question": "What is ${query}?",
+                "answer": "Detailed answer here in plain text without any markdown formatting or special characters."
+              },
+              {
+                "question": "Second question about ${query}?",
+                "answer": "Detailed answer to second question in plain text only."
+              },
+              ...and so on for 5 FAQs
+            ]`;
+
+            const response = await this.model.generateContent(prompt);
+            const text = response.response.text();
+            
+            try {
+                // Extract the JSON part from the response
+                const jsonMatch = text.match(/\[[\s\S]*\]/);
+                let parsedFaqs;
+                
+                if (jsonMatch) {
+                    parsedFaqs = JSON.parse(jsonMatch[0]);
+                } else {
+                    // Fallback parsing if JSON extraction fails
+                    parsedFaqs = JSON.parse(text);
+                }
+                
+                // Clean up any remaining markdown formatting in the answers
+                return parsedFaqs.map(faq => ({
+                    question: faq.question,
+                    answer: this.cleanMarkdownFormatting(faq.answer)
+                }));
+            } catch (parseError) {
+                console.error('Error parsing FAQ JSON:', parseError.message);
+                
+                // Fallback to a simple format if JSON parsing fails
+                return [
+                    {
+                        question: `What is ${query}?`,
+                        answer: 'Information not available. Please try a different query.'
+                    }
+                ];
+            }
+        } catch (error) {
+            console.error('Error generating FAQs:', error.message);
+            return [];
+        }
+    }
+    
+    // Helper method to clean markdown formatting from text
+    cleanMarkdownFormatting(text) {
+        if (!text) return '';
+        
+        // Remove asterisks for bold/italic
+        let cleaned = text.replace(/\*\*([^*]+)\*\*/g, '$1')  // Bold
+                         .replace(/\*([^*]+)\*/g, '$1');      // Italic
+        
+        // Replace markdown bullet points with plain text
+        cleaned = cleaned.replace(/^\s*\*\s+/gm, '• ');
+        
+        // Replace markdown numbered lists with plain text numbers
+        cleaned = cleaned.replace(/^\s*\d+\.\s+/gm, (match) => match);
+        
+        // Remove any remaining markdown syntax like #, >, -, etc.
+        cleaned = cleaned.replace(/^#+\s+/gm, '')            // Headers
+                         .replace(/^>\s+/gm, '')             // Blockquotes
+                         .replace(/^-\s+/gm, '• ')           // Dashed lists
+                         .replace(/`([^`]+)`/g, '$1')        // Inline code
+                         .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1'); // Links
+        
+        return cleaned;
+    }
 }
 
 module.exports = new GeminiService(); 

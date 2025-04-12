@@ -9,7 +9,7 @@ const {
     deleteSavedSearch
 } = require('../controllers/searchController');
 const { getSearchStatistics } = require('../controllers/statisticsController');
-const { enhanceSearchResults, getSearchSuggestions } = require('../controllers/enhancementController');
+const { enhanceSearchResults, getSearchSuggestions, generateFAQs } = require('../controllers/enhancementController');
 
 const router = express.Router();
 
@@ -32,5 +32,6 @@ router.get('/stats', getSearchStatistics);
 // Enhancement routes
 router.post('/enhance', enhanceSearchResults);
 router.get('/suggestions', getSearchSuggestions);
+router.get('/faqs', generateFAQs);
 
-module.exports = router; 
+module.exports = router;

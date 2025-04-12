@@ -60,4 +60,33 @@ exports.getSearchSuggestions = async (req, res) => {
             error: error.message
         });
     }
+};
+
+// @desc    Generate FAQs related to search query
+// @route   GET /api/search/faqs
+// @access  Private
+exports.generateFAQs = async (req, res) => {
+    try {
+        const { query } = req.query;
+
+        if (!query) {
+            return res.status(400).json({
+                success: false,
+                error: 'Search query is required'
+            });
+        }
+
+        // Get FAQs from Gemini AI
+        const faqs = await geminiService.generateFAQs(query);
+
+        res.status(200).json({
+            success: true,
+            faqs
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
 }; 
